@@ -3,8 +3,13 @@ import {Inter} from "next/font/google";
 import Table from "react-bootstrap/Table";
 import {Alert, Container} from "react-bootstrap";
 import {GetServerSideProps, GetServerSidePropsContext} from "next";
+import { Paginator } from "@/components/Pagination/Paginator";
+import { useState } from "react";
 
 const inter = Inter({subsets: ["latin"]});
+
+const PAGES_NUMBER = 10;
+const PAGINATION_LIMIT = 20;
 
 type TUserItem = {
   id: number
@@ -23,7 +28,9 @@ type TGetServerSideProps = {
 
 export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promise<{ props: TGetServerSideProps }> => {
   try {
-    const res = await fetch("http://localhost:3000/users", {method: 'GET'})
+    const { page = 1, limit = PAGINATION_LIMIT } = ctx.query;
+
+    const res = await fetch(`http://localhost:3000/users?page=${page}&limit=${limit}`, {method: 'GET'})
     if (!res.ok) {
       return {props: {statusCode: res.status, users: []}}
     }
@@ -38,6 +45,8 @@ export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promi
 
 
 export default function Home({statusCode, users}: TGetServerSideProps) {
+  const [activePage, setActivePage] = useState(1);
+
   if (statusCode !== 200) {
     return <Alert variant={'danger'}>Ошибка {statusCode} при загрузке данных</Alert>
   }
@@ -82,7 +91,7 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </tbody>
           </Table>
 
-          {/*TODO add pagination*/}
+          <Paginator pagesNumber={PAGES_NUMBER} activePage={activePage} setActivePage={setActivePage} />
 
         </Container>
       </main>
