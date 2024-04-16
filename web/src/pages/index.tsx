@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 const inter = Inter({subsets: ["latin"]});
 
-const PAGES_NUMBER = 10;
+const PAGES_NUMBER = 25;
 const PAGINATION_LIMIT = 20;
 
 type TUserItem = {

@@ -1,5 +1,8 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import Pagination from 'react-bootstrap/Pagination';
+import { calculatePagination } from './helpers';
+
+const MAX_VISIBLE_PAGES = 10;
 
 interface PaginatorProps {
     pagesNumber: number;
@@ -8,9 +11,10 @@ interface PaginatorProps {
 }
 
 export const Paginator = ({ pagesNumber, onPageChange, activePage }: PaginatorProps) => {
-    const pageArray = Array.from({ length: pagesNumber }, (_, i) => i + 1);
+    const pagesArray = calculatePagination(activePage, pagesNumber, MAX_VISIBLE_PAGES);
 
     const isFirstPage = activePage === 1;
+    const isLastPage = activePage === pagesNumber;
 
     const onClickPrev = () => {
         onPageChange(activePage - 1);
@@ -24,11 +28,11 @@ export const Paginator = ({ pagesNumber, onPageChange, activePage }: PaginatorPr
         <Pagination >
             <Pagination.First disabled={isFirstPage} />
             <Pagination.Prev onClick={onClickPrev} disabled={isFirstPage} />
-            {pageArray.map((page) => (
+            {pagesArray.map((page) => (
                 <Pagination.Item key={page} active={page === activePage} onClick={() => onPageChange(page)}>{page}</Pagination.Item>
             ))}
-            <Pagination.Next onClick={onClickNext} />
-            <Pagination.Last />
+            <Pagination.Next onClick={onClickNext} disabled={isLastPage} />
+            <Pagination.Last disabled={isLastPage} />
         </Pagination>
     );
 };
