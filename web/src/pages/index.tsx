@@ -4,7 +4,7 @@ import Table from "react-bootstrap/Table";
 import {Alert, Container} from "react-bootstrap";
 import {GetServerSideProps, GetServerSidePropsContext} from "next";
 import { Paginator } from "@/components/Pagination/Paginator";
-import { useState } from "react";
+import { useRouter } from "next/router";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -45,7 +45,16 @@ export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promi
 
 
 export default function Home({statusCode, users}: TGetServerSideProps) {
-  const [activePage, setActivePage] = useState(1);
+  const router = useRouter();
+  const { page } = router.query;
+  const activePage = page ? parseInt(page as string, 10) : 1;
+
+  const onPageChange = (page: number) => {
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page: page.toString() },
+    });
+  }
 
   if (statusCode !== 200) {
     return <Alert variant={'danger'}>Ошибка {statusCode} при загрузке данных</Alert>
@@ -91,7 +100,7 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </tbody>
           </Table>
 
-          <Paginator pagesNumber={PAGES_NUMBER} activePage={activePage} setActivePage={setActivePage} />
+          <Paginator pagesNumber={PAGES_NUMBER} activePage={activePage} onPageChange={onPageChange} />
 
         </Container>
       </main>
