@@ -16,11 +16,16 @@ export class UserController {
     paginationDto.page = Number(paginationDto.page);
     paginationDto.limit = Number(paginationDto.limit);
 
-    const users = await this.userService.findAll({
+    const { users, totalCount } = await this.userService.findAll({
       ...paginationDto,
       limit: paginationDto.limit > MAX_PAGINATION_LIMIT ? MAX_PAGINATION_LIMIT : paginationDto.limit,
     });
 
-    return users.map((user) => UsersResponseDto.fromUsersEntity(user));
+    const response = {
+      users: users.map((user) => UsersResponseDto.fromUsersEntity(user)),
+      totalCount,
+    };
+
+    return response;
   }
 }

@@ -8,8 +8,7 @@ import { useRouter } from "next/router";
 
 const inter = Inter({subsets: ["latin"]});
 
-const PAGES_NUMBER = 25;
-const PAGINATION_LIMIT = 20;
+const ITEMS_PER_PAGE = 20;
 
 type TUserItem = {
   id: number
@@ -23,31 +22,36 @@ type TUserItem = {
 type TGetServerSideProps = {
   statusCode: number
   users: TUserItem[]
+  totalCount: number
 }
 
 
 export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promise<{ props: TGetServerSideProps }> => {
   try {
-    const { page = 1, limit = PAGINATION_LIMIT } = ctx.query;
+    const { page = 1, limit = ITEMS_PER_PAGE } = ctx.query;
 
     const res = await fetch(`http://localhost:3000/users?page=${page}&limit=${limit}`, {method: 'GET'})
     if (!res.ok) {
-      return {props: {statusCode: res.status, users: []}}
+      return {props: {statusCode: res.status, users: [], totalCount: 0}}
     }
 
+    const { users, totalCount } = await res.json();
+
     return {
-      props: {statusCode: 200, users: await res.json()}
+      props: {statusCode: 200, users, totalCount}
     }
   } catch (e) {
-    return {props: {statusCode: 500, users: []}}
+    return {props: {statusCode: 500, users: [], totalCount: 0}}
   }
 }) satisfies GetServerSideProps<TGetServerSideProps>
 
 
-export default function Home({statusCode, users}: TGetServerSideProps) {
+export default function Home({statusCode, users, totalCount}: TGetServerSideProps) {
   const router = useRouter();
-  const { page } = router.query;
+
+  const { page = 1, limit = ITEMS_PER_PAGE } = router.query;
   const activePage = page ? parseInt(page as string, 10) : 1;
+  const pagesNumber = Math.ceil(totalCount / parseInt(limit as string, 10));
 
   const onPageChange = (page: number) => {
     router.push({
@@ -100,7 +104,7 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </tbody>
           </Table>
 
-          <Paginator pagesNumber={PAGES_NUMBER} activePage={activePage} onPageChange={onPageChange} />
+          <Paginator pagesNumber={pagesNumber} activePage={activePage} onPageChange={onPageChange} />
 
         </Container>
       </main>

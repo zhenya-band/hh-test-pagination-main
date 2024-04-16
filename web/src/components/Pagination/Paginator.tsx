@@ -24,15 +24,23 @@ export const Paginator = ({ pagesNumber, onPageChange, activePage }: PaginatorPr
         onPageChange(activePage + 1);
     }
 
+    const onClickFirst = () => {
+        onPageChange(1);
+    }
+
+    const onClickLast = () => {
+        onPageChange(pagesNumber);
+    }
+
     return (
         <Pagination >
-            <Pagination.First disabled={isFirstPage} />
-            <Pagination.Prev onClick={onClickPrev} disabled={isFirstPage} />
+            <Pagination.First disabled={isFirstPage} onClick={onClickFirst} />
+            <Pagination.Prev disabled={isFirstPage} onClick={onClickPrev} />
             {pagesArray.map((page) => (
                 <Pagination.Item key={page} active={page === activePage} onClick={() => onPageChange(page)}>{page}</Pagination.Item>
             ))}
-            <Pagination.Next onClick={onClickNext} disabled={isLastPage} />
-            <Pagination.Last disabled={isLastPage} />
+            <Pagination.Next disabled={isLastPage} onClick={onClickNext} />
+            <Pagination.Last disabled={isLastPage} onClick={onClickLast} />
         </Pagination>
     );
 };
