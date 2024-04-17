@@ -1,6 +1,8 @@
 import { UserService } from './users.service';
-import { Controller, Get, Logger } from '@nestjs/common';
-import {UsersResponseDto} from "./users.response.dto";
+import { Controller, Get, Logger, Query } from '@nestjs/common';
+import { UsersResponseDto } from './users.response.dto';
+import { PaginationDto } from './pagination.dto';
+import { MAX_PAGINATION_LIMIT } from 'src/constants';
 
 @Controller('users')
 export class UserController {
@@ -8,9 +10,22 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get()
-  async getAllUsers() {
-    this.logger.log('Get all users');
-    const users = await this.userService.findAll();
-    return users.map((user) => UsersResponseDto.fromUsersEntity(user));
+  async getAllUsers(@Query() paginationDto: PaginationDto) {
+    this.logger.log('Get all users paginationDto', paginationDto);
+
+    paginationDto.page = Number(paginationDto.page);
+    paginationDto.limit = Number(paginationDto.limit);
+
+    const { users, totalCount } = await this.userService.findAll({
+      ...paginationDto,
+      limit: paginationDto.limit > MAX_PAGINATION_LIMIT ? MAX_PAGINATION_LIMIT : paginationDto.limit,
+    });
+
+    const response = {
+      users: users.map((user) => UsersResponseDto.fromUsersEntity(user)),
+      totalCount,
+    };
+
+    return response;
   }
 }

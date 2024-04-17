@@ -3,8 +3,12 @@ import {Inter} from "next/font/google";
 import Table from "react-bootstrap/Table";
 import {Alert, Container} from "react-bootstrap";
 import {GetServerSideProps, GetServerSidePropsContext} from "next";
+import { Paginator } from "@/components/Pagination/Paginator";
+import { useRouter } from "next/router";
 
 const inter = Inter({subsets: ["latin"]});
+
+const ITEMS_PER_PAGE = 20;
 
 type TUserItem = {
   id: number
@@ -18,26 +22,44 @@ type TUserItem = {
 type TGetServerSideProps = {
   statusCode: number
   users: TUserItem[]
+  totalCount: number
 }
 
 
 export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promise<{ props: TGetServerSideProps }> => {
   try {
-    const res = await fetch("http://localhost:3000/users", {method: 'GET'})
+    const { page = 1, limit = ITEMS_PER_PAGE } = ctx.query;
+
+    const res = await fetch(`http://localhost:3000/users?page=${page}&limit=${limit}`, {method: 'GET'})
     if (!res.ok) {
-      return {props: {statusCode: res.status, users: []}}
+      return {props: {statusCode: res.status, users: [], totalCount: 0}}
     }
 
+    const { users, totalCount } = await res.json();
+
     return {
-      props: {statusCode: 200, users: await res.json()}
+      props: {statusCode: 200, users, totalCount}
     }
   } catch (e) {
-    return {props: {statusCode: 500, users: []}}
+    return {props: {statusCode: 500, users: [], totalCount: 0}}
   }
 }) satisfies GetServerSideProps<TGetServerSideProps>
 
 
-export default function Home({statusCode, users}: TGetServerSideProps) {
+export default function Home({statusCode, users, totalCount}: TGetServerSideProps) {
+  const router = useRouter();
+
+  const { page = 1, limit = ITEMS_PER_PAGE } = router.query;
+  const activePage = page ? parseInt(page as string, 10) : 1;
+  const pagesNumber = Math.ceil(totalCount / parseInt(limit as string, 10));
+
+  const onPageChange = (page: number) => {
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page: page.toString() },
+    });
+  }
+
   if (statusCode !== 200) {
     return <Alert variant={'danger'}>Ошибка {statusCode} при загрузке данных</Alert>
   }
@@ -82,7 +104,7 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </tbody>
           </Table>
 
-          {/*TODO add pagination*/}
+          <Paginator pagesNumber={pagesNumber} activePage={activePage} onPageChange={onPageChange} />
 
         </Container>
       </main>
